@@ -60,24 +60,30 @@ fetch_odds <- function(market_id) {
   return(odds)
 }
 
-epl_market_odds <- 
-  map_dfr(
-    .x = epl_market_ids, 
-    .f = fetch_odds
-    ) %>% 
-  bind_cols(
-    epl_markets %>% 
-      pull(event) %>%
-      select(name)
-    ) %>% 
-  mutate(
-    HomeTeam = str_extract(name, ".*(?= v)"),
-    AwayTeam = str_extract(name, "(?<=v ).*")
-    ) %>%
-  select(HomeTeam, AwayTeam, homeOdds, awayOdds)
-
-betfair_epl_market_odds <-
-  epl_market_odds %>% 
-  gather(key = "location", value = "name", -homeOdds, -awayOdds) %>% 
-  mutate(betfair = ifelse(location == "HomeTeam", homeOdds, awayOdds)) %>% 
-  select(name, odds)
+update_epl_market_odds <- function() {
+  
+  epl_market_odds <- 
+    map_dfr(
+      .x = epl_market_ids, 
+      .f = fetch_odds
+      ) %>% 
+    bind_cols(
+      epl_markets %>% 
+        pull(event) %>%
+        select(name)
+      ) %>% 
+    mutate(
+      HomeTeam = str_extract(name, ".*(?= v)"),
+      AwayTeam = str_extract(name, "(?<=v ).*")
+      ) %>%
+    select(HomeTeam, AwayTeam, homeOdds, awayOdds)
+  
+  betfair_epl_market_odds <-
+    epl_market_odds %>% 
+    gather(key = "location", value = "name", -homeOdds, -awayOdds) %>% 
+    mutate(betfair = ifelse(location == "HomeTeam", homeOdds, awayOdds)) %>% 
+    select(name, betfair)
+  
+  return(betfair_epl_market_odds) 
+  
+}
